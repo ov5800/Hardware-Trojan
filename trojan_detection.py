@@ -122,15 +122,18 @@ def compareFiles():
             print("The unknown bitstream is a trojan")
         exit()
 
-compareFiles()
-if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
-    bitIn, bitOut = inOutBits()
-else:
-    bitIn = input("Bit input:\n")
-    bitOut = input("Bit output:\n")
-if input("Open COM: y or n\n") == "y":
-    if input("Is this the golden bitstream: y or n\n") == "y":
-        golden = "golden"
+def main():
+    compareFiles()
+    if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
+        bitIn, bitOut = inOutBits()
     else:
-        golden = ""
-    openCOM(golden, int(bitIn), int(bitOut))
+        bitIn = input("Bit input:\n")
+        bitOut = input("Bit output:\n")
+    if input("Open COM: y or n\n") == "y":
+        if input("Is this the golden bitstream: y or n\n") == "y":
+            golden = "golden"
+        else:
+            golden = ""
+        openCOM(golden, int(bitIn), int(bitOut))
+
+main()
