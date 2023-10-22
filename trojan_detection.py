@@ -1,6 +1,6 @@
 import serial
 import os
-import random
+import filecmp
 
 
 def inOutBits():
@@ -42,9 +42,10 @@ def inOutBits():
             print(f"Wrapper Output: ", wrapperOutput, "bits", int((wrapperOutput + 8) / 8), "bytes")
     if foundFile == 0:
         print("Wrapper file was not found")
+        exit()
     return wrapperInput, wrapperOutput
 
-def openCOM(bitIn, bitOut):
+def openCOM(golden, bitIn, bitOut):
     com_port = 'COM7'  # TO-DO, change the com port of the FPGA device
     baud_rate = 115200  # Don't change this 
     try:
@@ -58,38 +59,43 @@ def openCOM(bitIn, bitOut):
         print(f"Connected to {com_port} at {baud_rate} baud\n")
 
         print("""
+    Welcome to
     =================================================================================================
-    Welcome to the hardware trojan detection method
-    =================================================================================================   
+     ________________
+            |
+            |                                       *
+            |                    _____                       _____          |   __
+            |       |  __       /     \             |             \         | /    \ 
+            |       |/   \     |       |            |        ______|        |/      \ 
+            |       |          |       |            |       /      |        |       |
+            |       |           \_____/         \___/       \_____/|        |       |
+    =================================================================================================
+    detection
         """)
 
         try:
-            while True:
-                # Send data to the device
-                for i in range(16):
-                    #loop through random inputs
-                    num = i * bitIn
-                    
-                    data_to_send = num
-                    data_to_send = data_to_send[2:] if data_to_send [0:2] == "0x" else data_to_send
-                    data_bytes = bytes.fromhex(data_to_send)
-                    ser.write(data_bytes)
-                    outputFile = open("Output.txt", "w")
-                    outputFile.write("Input:\t" + str(data_bytes))
-                    received_data = ser.read(bitOut)
-                    outputFile.write("Output:\t" + str(received_data))
-
-
-                # Read data from the FPGA
-                 # to-do, change the parameter into the number of bytes needed to read from FPGA
-                #safe   input = 0xff7fffffff    safe output = 0x07
-                #trojan input = 0xff7fffffff  trojan output = 0x27
+            for i in range(16):
+                #loop through random inputs
+                i = hex(i)[2:]
+                num = ''.join(str(i) * bitIn)
+                #print(num)
+                data_to_send = num
+                #data_to_send = data_to_send[2:] if data_to_send [0:2] == "0x" else data_to_send
+                data_bytes = bytes.fromhex(data_to_send)
+                ser.write(data_bytes)
+                outputFile = open( golden + "Output.txt", "a")
+                outputFile.write("Input:\t" + str(data_to_send) + "\n")
+                received_data = ser.read(int((bitOut+8)/8))
 
                 # Convert the received bytes to a hexadecimal string
                 hex_string = ''.join(f'{byte:02X}' for byte in received_data)
 
                 # Print the received data as a hexadecimal string
-                print(f"Received data: 0x{hex_string}")
+                #print(f"Received data: 0x{hex_string}")
+                outputFile.write("Output:\t0x" + hex_string + "\n\n")
+            outputFile.close()
+            #safe   input = 0xff7fffffff    safe output = 0x07
+            #trojan input = 0xff7fffffff  trojan output = 0x27
 
         except KeyboardInterrupt:
             pass
@@ -100,12 +106,31 @@ def openCOM(bitIn, bitOut):
         print(f"Failed to connect to {com_port}")
 
 
-if input("File location input output bits: y or n\n") == "y":
+def compareFiles():
+    output = False
+    golden = False
+    for file in os.listdir("./"):
+        if file == "Output.txt":
+            output = True
+        if file == "goldenOutput.txt":
+            golden = True
+    if golden & output:
+        print("Comparing the golden output with the unknown output")
+        if filecmp.cmp("Output.txt", "goldenOutput.txt"):
+            print("The unknown bitstream is not a trojan")
+        else:
+            print("The unknown bitstream is a trojan")
+        exit()
+
+compareFiles()
+if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
     bitIn, bitOut = inOutBits()
 else:
     bitIn = input("Bit input:\n")
     bitOut = input("Bit output:\n")
 if input("Open COM: y or n\n") == "y":
-    openCOM(int(bitIn), int(bitOut))
-#look at rtl and use random inputs and store the outputs
-#check against 
+    if input("Is this the golden bitstream: y or n\n") == "y":
+        golden = "golden"
+    else:
+        golden = ""
+    openCOM(golden, int(bitIn), int(bitOut))
