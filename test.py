@@ -5,12 +5,13 @@ wrapperOutput = ""
 
 path = input("Enter file location:\n")
 for file in os.listdir(path):                   #all files in path
+	print(file)
 	if file == "wrapper.v":                     #looking for the wrapper file
-		openFile = open(file)
+		openFile = open(path + file)
 		for line in openFile:                   #loop through all lines in the file
 			if line[0:5] == "input":            #only want to look at input
 				first = False
-				for i in line[5:]:                  #loop through all chars in line
+				for i in line[5:]:              #loop through all chars in line
 					if i == "[":
 						first = True
 					elif i == ":":
@@ -19,7 +20,7 @@ for file in os.listdir(path):                   #all files in path
 						wrapperInput += i
 			if line[0:6] == "output":            #only want to look at output
 				first = False
-				for i in line[6:]:                  #loop through all chars in line
+				for i in line[6:]:               #loop through all chars in line
 					if i == "[":
 						first = True
 					elif i == ":":
@@ -28,11 +29,10 @@ for file in os.listdir(path):                   #all files in path
 						wrapperOutput += i
 		openFile.close()
 
-wrapperInput = int(wrapperInput) + 1
-wrapperOutput = int(wrapperOutput) + 1
-print(f"Wrapper Input: ", wrapperInput)
-print(f"Wrapper Input Bytes: ", int((wrapperInput + 8) / 8 ))
-print(f"Wrapper Output: ", wrapperOutput)
-print(f"Wrapper Output Bytes: ", int((wrapperOutput + 8) / 8))
+		wrapperInput = int(wrapperInput) + 1
+		wrapperOutput = int(wrapperOutput) + 1
+		print(f"Wrapper Input: ", wrapperInput, "bits", int((wrapperInput + 8) / 8), "bytes")
+		print(f"Wrapper Output: ", wrapperOutput, "bits", int((wrapperOutput + 8) / 8), "bytes")
+
 
 
