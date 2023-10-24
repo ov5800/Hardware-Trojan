@@ -2,7 +2,7 @@ import serial
 import os
 import filecmp
 
-
+#Find how many input and output bits are in the provided Wrapper.v
 def inOutBits():
     wrapperInput = ""
     wrapperOutput = ""
@@ -19,16 +19,16 @@ def inOutBits():
                 if line[0:5] == "input":            #only want to look at input
                     first = False
                     for i in line[5:]:              #loop through all chars in line
-                        if i == "[":
+                        if i == "[":                #only want the numbers between '[' and ':'
                             first = True
                         elif i == ":":
                             first = False
                         elif first:
                             wrapperInput += i
-                if line[0:6] == "output":            #only want to look at output
+                if line[0:6] == "output":           #only want to look at output
                     first = False
-                    for i in line[6:]:               #loop through all chars in line
-                        if i == "[":
+                    for i in line[6:]:              #loop through all chars in line
+                        if i == "[":                #only want the numbers between '[' and ':'
                             first = True
                         elif i == ":":
                             first = False
@@ -36,15 +36,16 @@ def inOutBits():
                             wrapperOutput += i
             openFile.close()
 
-            wrapperInput = int(wrapperInput) + 1
+            wrapperInput = int(wrapperInput) + 1    #7 downto 0 is 8 bits
             wrapperOutput = int(wrapperOutput) + 1
-            print(f"Wrapper Input: ", wrapperInput, "bits", int((wrapperInput + 8) / 8), "bytes")
+            print(f"Wrapper Input: ", wrapperInput, "bits", int((wrapperInput + 8) / 8), "bytes")   #bit to byte conversion
             print(f"Wrapper Output: ", wrapperOutput, "bits", int((wrapperOutput + 8) / 8), "bytes")
     if foundFile == 0:
         print("Wrapper file was not found")
         exit()
     return wrapperInput, wrapperOutput
 
+#Open the COM port on the Basys3 and write inputs to it
 def openCOM(golden, bitIn, bitOut):
     com_port = 'COM7'  # TO-DO, change the com port of the FPGA device
     baud_rate = 115200  # Don't change this 
@@ -60,31 +61,38 @@ def openCOM(golden, bitIn, bitOut):
 
         print("""
     Welcome to
-    =================================================================================================
-     ________________
-            |
-            |                                       *
-            |                    _____                       _____          |   __
-            |       |  __       /     \             |             \         | /    \ 
-            |       |/   \     |       |            |        ______|        |/      \ 
-            |       |          |       |            |       /      |        |       |
-            |       |           \_____/         \___/       \_____/|        |       |
+    ==================================================================================================
+    |     _______________                                                                            |
+    |            |                                                                                   |
+    |            |                                       *                                           |
+    |            |                    _____                       _____          |   __              |
+    |            |       |  __       /     \             |             \         | /    \            |
+    |            |       |/   \     |       |            |        ______|        |/      \           |
+    |            |       |          |       |            |       /      |        |       |           |
+    |            |       |           \_____/         \___/       \_____/|        |       |           |
     =================================================================================================
     detection
         """)
 
         try:
             for i in range(16):
-                #loop through random inputs
+                #loop through inputs
                 i = hex(i)[2:]
-                num = ''.join(str(i) * bitIn)
+                i = bin(int(i, 16))[2:]
+                if len(str(i)) == 1:
+                    i = "000" + i
+                elif len(str(i)) == 2:
+                    i = "00" + i
+                elif len(str(i)) == 3:
+                    i = "0" + i
+                else:
+                    i = "" + i
+                num = ''.join(i * int(bitIn/4))     #make inputs bitIn size
                 #print(num)
-                data_to_send = num
-                #data_to_send = data_to_send[2:] if data_to_send [0:2] == "0x" else data_to_send
-                data_bytes = bytes.fromhex(data_to_send)
+                data_bytes = bytes.fromhex(num)
                 ser.write(data_bytes)
                 outputFile = open( golden + "Output.txt", "a")
-                outputFile.write("Input:\t" + str(data_to_send) + "\n")
+                outputFile.write("Input:\t" + str(num) + "\n")
                 received_data = ser.read(int((bitOut+8)/8))
 
                 # Convert the received bytes to a hexadecimal string
@@ -105,7 +113,7 @@ def openCOM(golden, bitIn, bitOut):
     else:
         print(f"Failed to connect to {com_port}")
 
-
+#Compare the two files
 def compareFiles():
     output = False
     golden = False
@@ -115,13 +123,16 @@ def compareFiles():
         if file == "goldenOutput.txt":
             golden = True
     if golden & output:
-        print("Comparing the golden output with the unknown output")
+        results = open( "results.txt", "a")
+        results.write("Comparing the golden output with the unknown output")
         if filecmp.cmp("Output.txt", "goldenOutput.txt"):
-            print("The unknown bitstream is not a trojan")
+            results.write("The unknown bitstream is not a trojan")
         else:
-            print("The unknown bitstream is a trojan")
+            results.write("The unknown bitstream is a trojan")
+        results.close();
         exit()
 
+#Main function to call all functions
 def main():
     compareFiles()
     if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
