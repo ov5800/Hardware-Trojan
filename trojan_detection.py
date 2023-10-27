@@ -124,11 +124,11 @@ def compareFiles():
             golden = True
     if golden & output:
         results = open( "results.txt", "a")
-        results.write("Comparing the golden output with the unknown output")
+        results.write("Comparing the golden output with the unknown output\n")
         if filecmp.cmp("Output.txt", "goldenOutput.txt"):
-            results.write("The unknown bitstream is not a trojan")
+            results.write("The unknown bitstream is not a trojan\n")
         else:
-            results.write("The unknown bitstream is a trojan")
+            results.write("The unknown bitstream is a trojan\n")
         results.close();
         exit()
 

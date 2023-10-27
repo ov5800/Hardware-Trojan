@@ -1,2 +1,0 @@
-Comparing the golden output with the unknown output
-The unknown bitstream is a trojan
