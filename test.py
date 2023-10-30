@@ -1,41 +1,49 @@
 #Just a file to test different stuff
 
 
-import os
+import random
 
-wrapperInput = ""
-wrapperOutput = ""
+bitIn = 36
 
-path = input("Enter file location:\n")
-for file in os.listdir(path):                   #all files in path
-	print(file)
-	if file == "wrapper.v":                     #looking for the wrapper file
-		openFile = open(path + file)
-		for line in openFile:                   #loop through all lines in the file
-			if line[0:5] == "input":            #only want to look at input
-				first = False
-				for i in line[5:]:              #loop through all chars in line
-					if i == "[":
-						first = True
-					elif i == ":":
-						first = False
-					elif first:
-						wrapperInput += i
-			if line[0:6] == "output":            #only want to look at output
-				first = False
-				for i in line[6:]:               #loop through all chars in line
-					if i == "[":
-						first = True
-					elif i == ":":
-						first = False
-					elif first:
-						wrapperOutput += i
-		openFile.close()
+for i in range(bitIn):
+	#loop through inputs
 
-		wrapperInput = int(wrapperInput) + 1
-		wrapperOutput = int(wrapperOutput) + 1
-		print(f"Wrapper Input: ", wrapperInput, "bits", int((wrapperInput + 8) / 8), "bytes")
-		print(f"Wrapper Output: ", wrapperOutput, "bits", int((wrapperOutput + 8) / 8), "bytes")
+	num = random.randint(0,2**bitIn-1)
+	num = bin(num)[2:]
+	#print(num)
+
+
+	i = hex(i)[2:]
+	i = bin(int(i, 16))[2:]
+	if len(str(i)) == 1:
+		i = "000" + i
+	elif len(str(i)) == 2:
+		i = "00" + i
+	elif len(str(i)) == 3:
+		i = "0" + i
+	else:
+		i = "" + i
+	num = ''.join(i * int(bitIn/4))     #make inputs bitIn size
+	#print(num)
 
 
 
+
+def generate_test_cases(n, num_test_cases):
+    test_cases = []
+    max_value = 2 ** n - 1
+    for _ in range(num_test_cases):
+        # Generate a random integer in the range of 0 to max_value
+        random_int = bin(random.randint(0, max_value))[2:]
+        test_cases.append(random_int)
+    return test_cases
+
+# Set the values for a 36-bit input
+n = 36  # 36-bit input
+num_test_cases = 10000  # Number of test cases to generate
+
+# Generate pseudo-random test cases
+test_cases = generate_test_cases(n, num_test_cases)
+
+# Print the generated test cases
+print(test_cases)

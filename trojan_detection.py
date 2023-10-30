@@ -1,6 +1,7 @@
 import serial
 import os
 import filecmp
+import random
 
 #Find how many input and output bits are in the provided Wrapper.v
 def inOutBits():
@@ -75,24 +76,30 @@ def openCOM(golden, bitIn, bitOut):
         """)
 
         try:
-            for i in range(16):
+            goldenFileLine = 0
+            for _ in range(bitIn * 100):
                 #loop through inputs
-                i = hex(i)[2:]
-                i = bin(int(i, 16))[2:]
-                if len(str(i)) == 1:
-                    i = "000" + i
-                elif len(str(i)) == 2:
-                    i = "00" + i
-                elif len(str(i)) == 3:
-                    i = "0" + i
+
+                if( golden == "golden" ):
+                    testNum = bin(random.randint(0,2**bitIn-1))[2:]
+                    while( len(testNum) < 36 ):
+                        testNum = '0' + testNum
+                    #print(testNum)
                 else:
-                    i = "" + i
-                num = ''.join(i * int(bitIn/4))     #make inputs bitIn size
-                #print(num)
-                data_bytes = bytes.fromhex(num)
+                    goldenOutputFile = open( "goldenOutput.txt")
+                    goldenOutputFile.seek(goldenFileLine)
+                    goldenNum = goldenOutputFile.readline()
+                    #print("xxx" + goldenNum[0:6] + "xxx")
+                    while goldenNum[0:6] != "Input:":
+                        goldenNum = goldenOutputFile.readline()
+                    testNum = goldenNum[7:-1]
+                    goldenOutputFile.readline()
+                    goldenFileLine = goldenOutputFile.tell()
+                    
+                data_bytes = bytes.fromhex(testNum)
                 ser.write(data_bytes)
                 outputFile = open( golden + "Output.txt", "a")
-                outputFile.write("Input:\t" + str(num) + "\n")
+                outputFile.write("Input:\t" + str(testNum) + "\n")
                 received_data = ser.read(int((bitOut+8)/8))
 
                 # Convert the received bytes to a hexadecimal string
@@ -101,7 +108,7 @@ def openCOM(golden, bitIn, bitOut):
                 # Print the received data as a hexadecimal string
                 #print(f"Received data: 0x{hex_string}")
                 outputFile.write("Output:\t0x" + hex_string + "\n\n")
-            outputFile.close()
+                outputFile.close()
             #safe   input = 0xff7fffffff    safe output = 0x07
             #trojan input = 0xff7fffffff  trojan output = 0x27
 
@@ -129,12 +136,11 @@ def compareFiles():
             results.write("The unknown bitstream is not a trojan\n")
         else:
             results.write("The unknown bitstream is a trojan\n")
-        results.close();
+        results.close()
         exit()
 
 #Main function to call all functions
 def main():
-    compareFiles()
     if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
         bitIn, bitOut = inOutBits()
     else:
@@ -146,5 +152,6 @@ def main():
         else:
             golden = ""
         openCOM(golden, int(bitIn), int(bitOut))
+        compareFiles()
 
 main()
