@@ -1,0 +1,8 @@
+Input: 00000000
+Output: 0x11
+
+Input: 11111111
+Output: 0x00
+
+Input: 01010101
+Output: 0x10

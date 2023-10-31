@@ -3,6 +3,22 @@ import os
 import filecmp
 import random
 
+def introPrint():
+    print("""
+    Welcome to
+    ==================================================================================================
+    |     _______________                                                                            |
+    |            |                                                                                   |
+    |            |                                       *                                           |
+    |            |                    _____                       _____          |   __              |
+    |            |       |  __       /     \             |             \         | /    \            |
+    |            |       |/   \     |       |            |        ______|        |/      \           |
+    |            |       |          |       |            |       /      |        |       |           |
+    |            |       |           \_____/         \___/       \_____/|        |       |           |
+    =================================================================================================
+    detection
+        """)
+
 #Find how many input and output bits are in the provided Wrapper.v
 def inOutBits():
     wrapperInput = ""
@@ -59,22 +75,6 @@ def openCOM(golden, bitIn, bitOut):
 
     if ser.is_open:
         print(f"Connected to {com_port} at {baud_rate} baud\n")
-
-        print("""
-    Welcome to
-    ==================================================================================================
-    |     _______________                                                                            |
-    |            |                                                                                   |
-    |            |                                       *                                           |
-    |            |                    _____                       _____          |   __              |
-    |            |       |  __       /     \             |             \         | /    \            |
-    |            |       |/   \     |       |            |        ______|        |/      \           |
-    |            |       |          |       |            |       /      |        |       |           |
-    |            |       |           \_____/         \___/       \_____/|        |       |           |
-    =================================================================================================
-    detection
-        """)
-
         try:
             goldenFileLine = 0
             for _ in range(bitIn * 100):
@@ -130,17 +130,29 @@ def compareFiles():
         if file == "goldenOutput.txt":
             golden = True
     if golden & output:
-        results = open( "results.txt", "a")
-        results.write("Comparing the golden output with the unknown output\n")
-        if filecmp.cmp("Output.txt", "goldenOutput.txt"):
-            results.write("The unknown bitstream is not a trojan\n")
-        else:
-            results.write("The unknown bitstream is a trojan\n")
-        results.close()
+        print("Comparing the golden output with the unknown output\n")
+        
+        file1_lines = open("goldenOutput.txt", "r").readlines()
+        file2_lines = open("Output.txt", "r").readlines()
+        xnor = open("xnor.txt", "w")
+
+        with open("results.txt", "w") as output_file:
+            inputLine = ""
+            for line_num, (line1, line2) in enumerate(zip(file1_lines, file2_lines)):
+                if line1.strip() != line2.strip():
+                    output_file.write(f"\t{inputLine}")
+                    output_file.write(f"golden{line1}")
+                    output_file.write(f"\t\t{line2}\n")
+                    xnor.write(inputLine[7:])               #this file stores all the values to xnor
+                    
+                else:
+                    inputLine = line1
         exit()
 
 #Main function to call all functions
 def main():
+    compareFiles()
+    introPrint()
     if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
         bitIn, bitOut = inOutBits()
     else:

@@ -24,19 +24,12 @@ module wrapper(
         in_val, 
         out_val
     );
+    
+input [31:0] in_val; 
+output [31:0] out_val;
 
-input [35:0] in_val;
-output [6:0] out_val;
 
-Circuit432 wrap(
-
-in_val[35],
-
-in_val[34],
-
-in_val[33],
-
-in_val[32],
+Circuit6288 wrap(
 
 in_val[31],
 
@@ -47,7 +40,6 @@ in_val[29],
 in_val[28],
 
 in_val[27],
-
 in_val[26],
 
 in_val[25],
@@ -103,6 +95,56 @@ in_val[1],
 in_val[0],
 
 
+  
+  out_val[31],
+
+out_val[30],
+
+out_val[29],
+
+out_val[28],
+
+out_val[27],
+out_val[26],
+
+out_val[25],
+
+out_val[24],
+
+out_val[23],
+
+out_val[22],
+
+out_val[21],
+
+out_val[20],
+
+out_val[19],
+
+out_val[18],
+
+out_val[17],
+
+out_val[16],
+
+out_val[15],
+
+out_val[14],
+
+out_val[13],
+
+out_val[12],
+
+out_val[11],
+
+out_val[10],
+
+out_val[9],
+
+out_val[8],
+
+out_val[7],
+
 out_val[6],
 
 out_val[5],
@@ -118,6 +160,7 @@ out_val[1],
 out_val[0]
 
 );
+
 
 
 endmodule

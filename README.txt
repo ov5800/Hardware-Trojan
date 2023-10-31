@@ -1,10 +1,15 @@
 How Our Code Works:
 Look at the provided Wrapper.v in python code to determine size of input and size of output by opening the file and reading it,
-looking at size(in_val) and size (out_val)
+looking at size(in_val) and size(out_val)
 
-This will let us generate pseudo random bit inputs without having to specify the size each time
-Using this input size, we generate different test cases so that using pseudo random inputs,
-we are able to test inputs and make a list of golden input-outputs and compare this list with the input-output list of the given bitstream to determine if it is safe or there is a trojan in it.
-If they are not the same, then we know that the given RTL has a trojan
+This will let us generate pseudo random bit inputs. The number of test inputs is the number of bits in the input times 100.
+If the golden bitstream is being run, random inputs are generated and stored. If the bistream is the unknown bitstream,
+the random inputs used in the golden bitstream are parsed and used as the inputs to the other bitstream.
 
-This will further be improved by 
+The inputs and outputs for both bitstreams are stored as text files and then compared to determine what bits cause a difference in output.
+If there is a difference in output, then we know that there is a trojan present that is affecting the output.
+
+At the moment the program cannot tell us which bits are affected by the trojan, so that is one of the goals.
+
+This would only work for a sequential circuit and can be changed to work for sequential circuits by trying to determine what causes a change in sequence.
+This is also included in the plans for the next improvement.
