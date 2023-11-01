@@ -82,7 +82,9 @@ def openCOM(golden, bitIn, bitOut):
 
                 if( golden == "golden" ):
                     testNum = bin(random.randint(0,2**bitIn-1))[2:]
-                    while( len(testNum) < 36 ):
+                    print(len(testNum))
+                    while( len(testNum) < bitIn | len(testNum) % 8 != 0 ):
+                        print("padded testNum, length = " + str(len(testNum)) + ", testNum = " + str(testNum))
                         testNum = '0' + testNum
                     #print(testNum)
                 else:
@@ -95,8 +97,10 @@ def openCOM(golden, bitIn, bitOut):
                     testNum = goldenNum[7:-1]
                     goldenOutputFile.readline()
                     goldenFileLine = goldenOutputFile.tell()
+
                     
-                data_bytes = bytes.fromhex(testNum)
+                    
+                data_bytes = bytes.fromhex(hex(int(testNum)))
                 ser.write(data_bytes)
                 outputFile = open( golden + "Output.txt", "a")
                 outputFile.write("Input:\t" + str(testNum) + "\n")
