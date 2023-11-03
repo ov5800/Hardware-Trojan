@@ -1,6 +1,6 @@
 import serial
 import os
-import filecmp
+import math
 import random
 
 def introPrint():
@@ -82,13 +82,13 @@ def openCOM(golden, bitIn, bitOut):
 
                 if( golden == "golden" ):
                     testNum = bin(random.randint(0,2**bitIn-1))[2:]
-                    print(len(testNum))
-                    while( len(testNum) < bitIn | len(testNum) % 8 != 0 ):
-                        print("padded testNum, length = " + str(len(testNum)) + ", testNum = " + str(testNum))
-                        testNum = '0' + testNum
+                    #while len(testNum) < (math.ceil(bitIn / 8) * 8):
+                    #    testNum = '0' + testNum
+                    #print("padded testNum, length = " + str(len(testNum)) + ", testNum = " + str(testNum))
+                            
                     #print(testNum)
                 else:
-                    goldenOutputFile = open( "goldenOutput.txt")
+                    goldenOutputFile = open("goldenOutput.txt")
                     goldenOutputFile.seek(goldenFileLine)
                     goldenNum = goldenOutputFile.readline()
                     #print("xxx" + goldenNum[0:6] + "xxx")
@@ -98,12 +98,16 @@ def openCOM(golden, bitIn, bitOut):
                     goldenOutputFile.readline()
                     goldenFileLine = goldenOutputFile.tell()
 
-                    
-                    
-                data_bytes = bytes.fromhex(hex(int(testNum)))
+                    #0000 0000 0101 0000 1011 0100 1101 0010 0001 0101 0111 0111
+                    #0000 0000 1000 0011 0011 0011 0010 1110 1001 0100 0011 1100
+                    #  0    0   8    3     3    3    2    e    9    4    3    c
+                    #0000 0000 0101 001000110001011110111110100011011010
+                hexTestNum = hex( int(testNum, 2) )[2:].zfill(int((math.ceil(bitIn / 8) * 8)/4))
+                print(hexTestNum)
+                data_bytes = bytes.fromhex(hexTestNum)
                 ser.write(data_bytes)
                 outputFile = open( golden + "Output.txt", "a")
-                outputFile.write("Input:\t" + str(testNum) + "\n")
+                outputFile.write("Input:\t" + str(bin(int(hexTestNum, 16))[2:].zfill((math.ceil(bitIn / 8) * 8))) + "\n")
                 received_data = ser.read(int((bitOut+8)/8))
 
                 # Convert the received bytes to a hexadecimal string
@@ -129,7 +133,7 @@ def compareFiles():
     output = False
     golden = False
     for file in os.listdir("./"):
-        if file == "Output.txt":
+        if file[1:] == "Output.txt":
             output = True
         if file == "goldenOutput.txt":
             golden = True
@@ -155,7 +159,6 @@ def compareFiles():
 
 #Main function to call all functions
 def main():
-    compareFiles()
     introPrint()
     if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
         bitIn, bitOut = inOutBits()
@@ -166,8 +169,13 @@ def main():
         if input("Is this the golden bitstream: y or n\n") == "y":
             golden = "golden"
         else:
-            golden = ""
+            numFiles = input("How many files to test?\n")
+            if numFiles == 1:
+                golden = ""
+            else:
+                golden = numFiles
         openCOM(golden, int(bitIn), int(bitOut))
-        compareFiles()
+        if input("All files? y/?") == "y":
+            compareFiles()
 
 main()
