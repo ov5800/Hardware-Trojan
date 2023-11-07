@@ -1,0 +1,4 @@
+XNOR result is:
+000000010010100000000000010111011110010001001000
+
+As there was no difference in output between file 2 and the golden output, it can be infered that bitsteam 2 was the golden bitstream.

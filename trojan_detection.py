@@ -102,12 +102,13 @@ def openCOM(golden, bitIn, bitOut):
                     #0000 0000 1000 0011 0011 0011 0010 1110 1001 0100 0011 1100
                     #  0    0   8    3     3    3    2    e    9    4    3    c
                     #0000 0000 0101 001000110001011110111110100011011010
-                hexTestNum = hex( int(testNum, 2) )[2:].zfill(int((math.ceil(bitIn / 8) * 8)/4))
-                print(hexTestNum)
+                zFillNum = int(math.ceil(bitIn/8) * 8)
+                hexTestNum = hex( int(testNum, 2) )[2:].zfill(int(zFillNum/4))
+                #print(hexTestNum)
                 data_bytes = bytes.fromhex(hexTestNum)
                 ser.write(data_bytes)
                 outputFile = open( golden + "Output.txt", "a")
-                outputFile.write("Input:\t" + str(bin(int(hexTestNum, 16))[2:].zfill((math.ceil(bitIn / 8) * 8))) + "\n")
+                outputFile.write("Input:\t" + str(bin(int(hexTestNum, 16)))[2:].zfill(zFillNum) + "\n")
                 received_data = ser.read(int((bitOut+8)/8))
 
                 # Convert the received bytes to a hexadecimal string
@@ -132,21 +133,27 @@ def openCOM(golden, bitIn, bitOut):
 def compareFiles():
     output = False
     golden = False
+    output1 = False
+    output2 = False
     for file in os.listdir("./"):
-        if file[1:] == "Output.txt":
+        if file == "Output.txt":
             output = True
         if file == "goldenOutput.txt":
             golden = True
+        if file == "1Output.txt":
+            output1 = True
+        if file == "2Output.txt":
+            output2 = True
     if golden & output:
         print("Comparing the golden output with the unknown output\n")
         
-        file1_lines = open("goldenOutput.txt", "r").readlines()
-        file2_lines = open("Output.txt", "r").readlines()
+        golden_lines = open("goldenOutput.txt", "r").readlines()
+        output_lines = open("Output.txt", "r").readlines()
         xnor = open("xnor.txt", "w")
 
         with open("results.txt", "w") as output_file:
             inputLine = ""
-            for line_num, (line1, line2) in enumerate(zip(file1_lines, file2_lines)):
+            for line_num, (line1, line2) in enumerate(zip(golden_lines, output_lines)):
                 if line1.strip() != line2.strip():
                     output_file.write(f"\t{inputLine}")
                     output_file.write(f"golden{line1}")
@@ -155,11 +162,68 @@ def compareFiles():
                     
                 else:
                     inputLine = line1
-        exit()
+                    
+    elif golden & output1 & output2:
+        print("Comparing the golden output with the two unknown outputs\n")
+        
+        golden_lines = open("goldenOutput.txt", "r").readlines()
+        output1_lines = open("1Output.txt", "r").readlines()
+        output2_lines = open("2Output.txt", "r").readlines()
+        xnor = open("xnor.txt", "w")
+
+        with open("results.txt", "w") as output_file:
+            inputLine1 = ""
+            inputLine2 = ""
+            for line_num, (gLine, o1Line, o2Line) in enumerate(zip(golden_lines, output1_lines, output2_lines)):
+                if gLine.strip() != o1Line.strip():
+                    output_file.write("File 1 Output Mismatch\n")
+                    output_file.write(f"\t{inputLine1}")
+                    output_file.write(f"golden{gLine}")
+                    output_file.write(f"\t\t{o1Line}\n")
+                    xnor.write(inputLine1[7:])               #this file stores all the values to xnor
+                else:
+                    inputLine1 = gLine           #stores previous line as it only compares outputs
+
+                if gLine.strip() != o2Line.strip():
+                    output_file.write("File 2 Output Mismatch\n")
+                    output_file.write(f"\t{inputLine2}")
+                    output_file.write(f"golden{gLine}")
+                    output_file.write(f"\t\t{o2Line}\n")
+                    xnor.write(inputLine2[7:])               #this file stores all the values to xnor
+                else:
+                    inputLine2 = gLine           #stores previous line as it only compares outputs
+    xnor.close()
+    xnorResult = str(xNor())
+    print("XNOR result is:\n" + xnorResult)
+    final = open("finalResult.txt", 'w')
+    final.write("XNOR result is:\n" + xnorResult)
+    exit()
+
+def xNor():
+    with open("xnor.txt", 'r') as file:
+        lines = file.readlines()
+    
+    if len(lines) == 0:
+        return "NaN, there is no trojan detected"
+
+    result = int(lines[0].strip(), 2)
+    for line in lines[1:]:
+        binary_number = int(line.strip(), 2)
+        result = ~(result ^ binary_number)
+    
+    bit_length = len(lines[0].strip())
+    result_binary_str = format(result, '0{}b'.format(bit_length))
+
+    # Correcting for the inversion of all bits including leading zeros
+    result_binary_str = result_binary_str[-bit_length:]
+    
+    return result_binary_str
 
 #Main function to call all functions
 def main():
     introPrint()
+    if input("Do you want to compare files?\n") == "y":
+        compareFiles()
     if input("Do you want to look at a wrapper file for bit lengths? y or n\n") == "y":
         bitIn, bitOut = inOutBits()
     else:
@@ -169,13 +233,10 @@ def main():
         if input("Is this the golden bitstream: y or n\n") == "y":
             golden = "golden"
         else:
-            numFiles = input("How many files to test?\n")
-            if numFiles == 1:
-                golden = ""
-            else:
-                golden = numFiles
+            numFiles = input("How many unknown files to test?\n")
+            golden = numFiles
         openCOM(golden, int(bitIn), int(bitOut))
-        if input("All files? y/?") == "y":
+        if input("All files? y/?\n") == "y":
             compareFiles()
 
 main()

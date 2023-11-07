@@ -1,0 +1,4 @@
+XNOR result is:
+0000000101011010110110000111010011110101
+
+Because there were no mismatch between file 1 and the golden output, it can be concluded that bitstream 1 was the golden bitstream
