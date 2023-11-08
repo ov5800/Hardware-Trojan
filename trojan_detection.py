@@ -77,7 +77,7 @@ def openCOM(golden, bitIn, bitOut):
         print(f"Connected to {com_port} at {baud_rate} baud\n")
         try:
             goldenFileLine = 0
-            for _ in range(bitIn * 100):
+            for _ in range(bitIn * 1000):
                 #loop through inputs
 
                 if( golden == "golden" ):
@@ -176,7 +176,7 @@ def compareFiles():
             inputLine2 = ""
             for line_num, (gLine, o1Line, o2Line) in enumerate(zip(golden_lines, output1_lines, output2_lines)):
                 if gLine.strip() != o1Line.strip():
-                    output_file.write("File 1 Output Mismatch\n")
+                    output_file.write("Bitstream 1 Output Mismatch\n")
                     output_file.write(f"\t{inputLine1}")
                     output_file.write(f"golden{gLine}")
                     output_file.write(f"\t\t{o1Line}\n")
@@ -185,7 +185,7 @@ def compareFiles():
                     inputLine1 = gLine           #stores previous line as it only compares outputs
 
                 if gLine.strip() != o2Line.strip():
-                    output_file.write("File 2 Output Mismatch\n")
+                    output_file.write("Bitstream 2 Output Mismatch\n")
                     output_file.write(f"\t{inputLine2}")
                     output_file.write(f"golden{gLine}")
                     output_file.write(f"\t\t{o2Line}\n")
@@ -209,7 +209,7 @@ def xNor():
     result = int(lines[0].strip(), 2)
     for line in lines[1:]:
         binary_number = int(line.strip(), 2)
-        result = ~(result ^ binary_number)
+        result = ~(result ^ binary_number) & ((1 << len(lines[0].strip())) - 1)
     
     bit_length = len(lines[0].strip())
     result_binary_str = format(result, '0{}b'.format(bit_length))

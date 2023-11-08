@@ -1,4 +1,4 @@
-File 1 Output Mismatch
+Bitstream 1 Output Mismatch
 	Input:	000000010111110100111100011010111001101101101010
 goldenOutput:	0x3C6B9B6A
 		Output:	0x3C6B1B6A
